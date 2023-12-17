@@ -1,6 +1,8 @@
 import pygame, sys
 from scripts.entities import PhysicsEntity
-from scripts.utils import load_image
+from scripts.tilemap import Tilemap
+from scripts.utils import load_image, load_images
+
 
 class Game:
     def __init__(self) -> None:
@@ -12,17 +14,25 @@ class Game:
         self.clock = pygame.time.Clock()
         
         self.assets = {
+            "decor": load_images("tiles/decor"),
+            "grass": load_images("tiles/grass"),
+            "large_decor": load_images("tiles/large_decor"),
+            "stone": load_images("tiles/stone"),
             "player": load_image("entities/player.png")
         }
 
         self.player = PhysicsEntity(self, "player", (50, 50), (8, 15))
         self.movement = [False, False]
 
+        self.tilemap = Tilemap(self)
+
     def run(self) -> None:
         while True:
             self.display.fill((14, 219, 248))
 
-            self.player.update((self.movement[0] - self.movement[1], 0))
+            self.tilemap.render(self.display)
+
+            self.player.update(self.tilemap, (self.movement[0] - self.movement[1], 0))
             self.player.render(self.display)
 
             for event in pygame.event.get():
@@ -34,6 +44,8 @@ class Game:
                         self.movement[0] = True
                     if event.key == pygame.K_LEFT:
                         self.movement[1] = True
+                    if event.key == pygame.K_UP :
+                        self.player.velocity[1] = -4
                 if event.type == pygame.KEYUP:
                     if event.key == pygame.K_RIGHT:
                         self.movement[0] = False
