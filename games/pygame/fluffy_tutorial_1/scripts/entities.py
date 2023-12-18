@@ -43,8 +43,24 @@ class PhysicsEntity:
 
         self.velocity[1] = min(5, self.velocity[1] + 0.2)
 
+        if self.game.movement[0] and self.game.running:
+            self.velocity[0] = min(2, self.velocity[0] + 0.05)
+        elif self.game.movement[1] and self.game.running:
+            self.velocity[0] = max(-2, self.velocity[0] - 0.05)
+        else:
+            if self.velocity[0] > 0 and self.velocity[1] != 0:
+                self.velocity[0] = max(0, self.velocity[0] - 0.075)
+            elif self.velocity[0] < 0 and self.velocity[1] != 0:
+                self.velocity[0] = min(0, self.velocity[0] + 0.075)
+
+
         if self.collisions['down'] or self.collisions['up']:
             self.velocity[1] = 0
+        if self.collisions["right"] or self.collisions["left"]:
+            self.velocity[0] = 0
 
-    def render(self, surface):
-        surface.blit(self.game.assets["player"], self.position)
+    def render(self, surface, offset = (0, 0)):
+        surface.blit(
+            self.game.assets["player"], 
+            (self.position[0] - offset[0], self.position[1] - offset[1])
+        )

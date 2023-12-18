@@ -13,7 +13,7 @@ class Tilemap:
 
         for i in range(20):
             self.tilemap[str(i) + ";10"] = {"type": "grass", "variant": 1, "position": (i, 10)}
-            self.tilemap["10;" + str(5 + i)] = {"type": "stone", "variant": 1, "position": (10, 5 + i)}
+            self.tilemap["10;" + str(10 + i)] = {"type": "stone", "variant": 1, "position": (10, 10 + i)}
 
     def tiles_around(self, position):
         tiles = []
@@ -37,15 +37,27 @@ class Tilemap:
                 ))
         return rects
 
-    def render(self, surface):
+    def render(self, surface, offset=(0, 0)):
         for tile in self.offgrid_tiles:
             surface.blit(
-                self.game.assets[tile["type"]][tile["variant"]], tile["position"]
+                self.game.assets[tile["type"]][tile["variant"]], 
+                (tile["position"][0] - offset[0], tile["position"][1] - offset[1]) 
             )
 
-        for location in self.tilemap:
-            tile = self.tilemap[location]
-            surface.blit(
-                self.game.assets[tile["type"]][tile["variant"]],
-                (tile["position"][0] * self.size, tile["position"][1] * self.size)
-            )
+        for x in range(offset[0] // self.size, (offset[0] + surface.get_width()) // self.size + 1):
+            for y in range(offset[1] // self.size, (offset[1] + surface.get_height()) // self.size + 1):
+                location = str(x) + ";" + str(y)
+
+                if location in self.tilemap:
+                    tile = self.tilemap[location]
+                    surface.blit(
+                    self.game.assets[tile["type"]][tile["variant"]],
+                    (tile["position"][0] * self.size - offset[0], tile["position"][1] * self.size - offset[1])
+                    )
+
+        #for location in self.tilemap:
+        #    tile = self.tilemap[location]
+        #    surface.blit(
+        #        self.game.assets[tile["type"]][tile["variant"]],
+        #       (tile["position"][0] * self.size - offset[0], tile["position"][1] * self.size - offset[1])
+        #   )
