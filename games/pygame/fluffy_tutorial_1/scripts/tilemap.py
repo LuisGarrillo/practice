@@ -1,9 +1,20 @@
-import pygame
+import pygame, json
 PHYSICS_TILES = {"grass", "stone"}
 NEIGHBOR_OFFSETS = [
     (-1, 0), (-1, -1), (0, -1), (0, 0), (0, 1), (1, 1), (1, 0), (-1, 1), (1, -1)
 ]
-
+AUTOTILES_TYPES = {"grass", "stone"}
+AUTOTILE_MAP = {
+    tuple(sorted([(1, 0), (0, 1)])): 0,
+    tuple(sorted([(1, 0), (0, 1), (-1, 0)])): 1,
+    tuple(sorted([(-1, 0), (0, 1)])): 2, 
+    tuple(sorted([(-1, 0), (0, -1), (0, 1)])): 3,
+    tuple(sorted([(-1, 0), (0, -1)])): 4,
+    tuple(sorted([(-1, 0), (0, -1), (1, 0)])): 5,
+    tuple(sorted([(1, 0), (0, -1)])): 6,
+    tuple(sorted([(1, 0), (0, -1), (0, 1)])): 7,
+    tuple(sorted([(1, 0), (-1, 0), (0, 1), (0, -1)])): 8,
+}
 class Tilemap:
     def __init__(self, game, tile_size=16):
         self.game = game
@@ -11,9 +22,33 @@ class Tilemap:
         self.tilemap = {}
         self.offgrid_tiles = []
 
-        for i in range(20):
-            self.tilemap[str(i) + ";10"] = {"type": "grass", "variant": 1, "position": (i, 10)}
-            self.tilemap["10;" + str(10 + i)] = {"type": "stone", "variant": 1, "position": (10, 10 + i)}
+    def save(self, path):
+        with open(path, "w") as file:
+            json.dump({"tilemap": self.tilemap, "tile_size": self.size, "offgrid": self.offgrid_tiles}, file)
+
+    def load(self, path):
+        with open(path, "r") as file:
+            map_data = json.load(file)
+
+        self.tilemap = map_data["tilemap"]
+        self.size = map_data["tile_size"]
+        self.offgrid_tiles = map_data["offgrid"]
+
+    def autotile(self):
+        for location in self.tilemap:
+            tile = self.tilemap[location]
+            neighbors = set()
+            for shift in [(1, 0), (-1, 0), (0, 1), (0, -1)]:
+                check_location = str(tile["position"][0] + shift[0]) + ";" + str(tile["position"][1] + shift[1])
+                if (
+                    check_location in self.tilemap and  
+                    self.tilemap[check_location]["type"] == tile["type"]
+                    ):
+
+                    neighbors.add(shift)
+            neighbors = tuple(sorted(neighbors))
+            if (tile["type"] in AUTOTILES_TYPES and neighbors in AUTOTILE_MAP):
+                tile["variant"] = AUTOTILE_MAP[neighbors]
 
     def tiles_around(self, position):
         tiles = []

@@ -34,6 +34,11 @@ class Game:
         self.movement = [False, False]
 
         self.tilemap = Tilemap(self)
+        try:
+            self.tilemap.load("map.json")
+        except FileNotFoundError:
+            pass
+
         self.clouds = Cloud(self.assets["clouds"])
         self.scroll = [0, 0]
 
