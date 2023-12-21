@@ -39,7 +39,7 @@ class Tilemap:
             tile = self.tilemap[location]
             neighbors = set()
             for shift in [(1, 0), (-1, 0), (0, 1), (0, -1)]:
-                check_location = str(tile["position"][0] + shift[0]) + ";" + str(tile["position"][1] + shift[1])
+                check_location = str(tile["pos"][0] + shift[0]) + ";" + str(tile["pos"][1] + shift[1])
                 if (
                     check_location in self.tilemap and  
                     self.tilemap[check_location]["type"] == tile["type"]
@@ -62,17 +62,17 @@ class Tilemap:
             tile = self.tilemap[location]
             if (tile["type"], tile["variant"]) in id_pairs:
                 matches.append(tile.copy())
-                matches[-1]["position"] = matches[-1]["position"].copy()
-                matches[-1]["position"][0] *= self.size
-                matches[-1]["position"][1] *= self.size
+                matches[-1]["pos"] = matches[-1]["pos"].copy()
+                matches[-1]["pos"][0] *= self.size
+                matches[-1]["pos"][1] *= self.size
                 if not keep:
                     del self.tilemap["location"]
 
         return matches
 
-    def tiles_around(self, position):
+    def tiles_around(self, pos):
         tiles = []
-        tile_location = (int(position[0] // self.size), int(position[1] // self.size))
+        tile_location = (int(pos[0] // self.size), int(pos[1] // self.size))
 
         for offset in NEIGHBOR_OFFSETS:
             check_location = str(tile_location[0] + offset[0]) + ";" + str(tile_location[1] + offset[1])
@@ -80,13 +80,21 @@ class Tilemap:
                 tiles.append(self.tilemap[check_location])
         return tiles
     
-    def physics_rects_around(self, position):
+    def solid_check(self, pos):
+        tile_location = str(int((pos[0]) // self.size)) + ";" + str(int((pos[1]) // self.size))
+
+        if tile_location in self.tilemap: 
+            if self.tilemap[tile_location]["type"] in PHYSICS_TILES:
+                return self.tilemap[tile_location]
+    
+    def physics_rects_around(self, pos):
         rects = []
-        for tile in self.tiles_around(position):
+        tiles = self.tiles_around(pos)
+        for tile in tiles:
             if tile["type"] in PHYSICS_TILES:
                 rects.append(pygame.Rect(
-                    tile["position"][0] * self.size, 
-                    tile["position"][1] * self.size,
+                    tile["pos"][0] * self.size, 
+                    tile["pos"][1] * self.size,
                     self.size,
                     self.size
                 ))
@@ -96,7 +104,7 @@ class Tilemap:
         for tile in self.offgrid_tiles:
             surface.blit(
                 self.game.assets[tile["type"]][tile["variant"]], 
-                (tile["position"][0] - offset[0], tile["position"][1] - offset[1]) 
+                (tile["pos"][0] - offset[0], tile["pos"][1] - offset[1]) 
             )
 
         for x in range(offset[0] // self.size, (offset[0] + surface.get_width()) // self.size + 1):
@@ -107,12 +115,12 @@ class Tilemap:
                     tile = self.tilemap[location]
                     surface.blit(
                     self.game.assets[tile["type"]][tile["variant"]],
-                    (tile["position"][0] * self.size - offset[0], tile["position"][1] * self.size - offset[1])
+                    (tile["pos"][0] * self.size - offset[0], tile["pos"][1] * self.size - offset[1])
                     )
 
         #for location in self.tilemap:
         #    tile = self.tilemap[location]
         #    surface.blit(
         #        self.game.assets[tile["type"]][tile["variant"]],
-        #       (tile["position"][0] * self.size - offset[0], tile["position"][1] * self.size - offset[1])
+        #       (tile["pos"][0] * self.size - offset[0], tile["pos"][1] * self.size - offset[1])
         #   )
