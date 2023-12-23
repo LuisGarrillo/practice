@@ -13,6 +13,10 @@ def load_images(path):
         images.append(load_image(path + "/" + img_name))
     return images
 
+def render_text(surface, text, font, color, position):
+    img = font.render(text, True, color)
+    surface.blit(img, position)
+
 class Animation:
     def __init__(self, images : list, duration = 5, loop = True) -> None:
         self.images = images
