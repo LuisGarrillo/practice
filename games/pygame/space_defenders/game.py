@@ -18,7 +18,7 @@ class Game:
         self.advance = False
 
         self.assets = {
-            "player/idle": Animation(load_images("assets/player/idle"), 6),
+            "player/idle": Animation(load_images("assets/player/idle"), 8),
             "player/shooting": Animation(load_images("assets/player/shooting"), 6),
             "player/sword": Animation(load_images("assets/player/sword"), 10, loop=False),
             "slash": Animation(load_images("assets/slash"), 10),
@@ -36,7 +36,7 @@ class Game:
         self.start(level=0)
 
     def start(self, score=0, level=0):
-        self.player = Player(self, (37, self.display.get_height()/2), (32, 32), 3)
+        self.player = Player(self, (37, self.display.get_height()/2), (40, 48), 3)
         self.movement = [False, False]
         self.projectiles = []
 
@@ -49,6 +49,7 @@ class Game:
         self.basic_enemy_counter = 1
         self.heavy_enemy_counter = 1
         self.fast_enemy_counter  = 1
+
         self.basic_enemy_cap = 120
         self.heavy_enemy_cap = 240
         self.fast_enemy_cap = 180
@@ -62,6 +63,12 @@ class Game:
             self.basic_enemy_counter += 1
             self.heavy_enemy_counter += 1
         elif level == 2:
+            self.basic_enemy_counter = 1
+            self.heavy_enemy_counter = 1
+            self.fast_enemy_counter += 1
+        else:
+            self.basic_enemy_counter += 1
+            self.heavy_enemy_counter += 1
             self.fast_enemy_counter += 1
 
     def load_level(self, level=0):  
@@ -73,11 +80,6 @@ class Game:
         ...
 
     def run(self):
-        def reset_counter(type):
-            if type == "basic_enemy":
-                self.basic_enemy_counter = 1
-            if type == "heavy_enemy":
-                self.heavy_enemy_counter = 1
 
         while True:
             self.display.fill((67, 59, 103))
@@ -109,6 +111,7 @@ class Game:
                         self.player.hit()
                         self.enemies.remove(enemy)
                     elif self.player.sword_active and self.player.sword_cooldown < 20 and enemy.rect().colliderect(self.player.sword_rect()):
+                        self.score += 1
                         self.enemies.remove(enemy)
         
             for projectile in self.projectiles.copy():

@@ -47,8 +47,8 @@ class Player(PhysicsEntity):
 
     def update(self, movement=[0, 0]) -> None:
         super().update(movement)
-        if self.position[1] > self.game.display.get_height() - self.size[1] or self.position[1] < self.size[1]:
-            self.position[1] = min(max(self.position[1], self.size[1]), self.game.display.get_height() - self.size[1])
+        if self.position[1] > self.game.display.get_height() - self.size[1] or self.position[1] < self.game.assets["energy_0"].get_height():
+            self.position[1] = min(max(self.position[1], self.game.assets["energy_0"].get_height()), self.game.display.get_height() - self.size[1])
             
         if self.invincibility:
             self.invincibility -= 1
