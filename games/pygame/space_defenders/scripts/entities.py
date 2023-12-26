@@ -55,7 +55,7 @@ class Player(PhysicsEntity):
 
         if self.shoot_cooldown:
             self.shoot_cooldown -= 1
-            if self.shoot_cooldown == 35:
+            if self.shoot_cooldown == 5:
                 self.wait = False
 
         if self.sword_cooldown:
@@ -75,7 +75,7 @@ class Player(PhysicsEntity):
 
     def shoot(self):
         if self.shoot_cooldown == 0:
-            self.shoot_cooldown = 45
+            self.shoot_cooldown = 20
             self.game.projectiles.append(Projectile(self.game, (self.position[0] + self.size[0], self.position[1] + self.size[1]/2), (32, 32)))
             self.wait = True
             self.set_action("shooting")
@@ -117,5 +117,19 @@ class FastEnemy(PhysicsEntity):
     def update(self, movement=(0, 0)) -> None:
         super().update(movement)
         self.velocity[0] = (min(-3, self.velocity[0] - 0.2))
+
+class DirectedEnemy(PhysicsEntity):
+    def __init__(self, game, position, size, health) -> None:
+        super().__init__(game, "directed_enemy", position, size, health)
+
+    def update(self, movement=(0, 0)) -> None:
+        self.velocity[0] = -6
+        if self.position[1] < self.game.player.position[1] + self.game.player.size[1]/2:
+            self.velocity[1] = 1
+        elif self.position[1] > self.game.player.position[1] + self.game.player.size[1]/2:
+            self.velocity[1] = -1
+        else:
+            self.velocity[1] = 0
+        super().update(movement)
 
     

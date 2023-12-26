@@ -1,7 +1,8 @@
 import pygame, sys, random
 
-from scripts.entities import Player, BasicEnemy, HeavyEnemy, FastEnemy
+from scripts.entities import Player, BasicEnemy, HeavyEnemy, FastEnemy, DirectedEnemy
 from scripts.utils import load_image, load_images, render_text, Animation
+from scripts.planets import Planets
 
 class Game:
     def __init__(self) -> None:
@@ -18,6 +19,7 @@ class Game:
         self.advance = False
 
         self.assets = {
+            "planets": load_images("assets/planets"),
             "player/idle": Animation(load_images("assets/player/idle"), 8),
             "player/shooting": Animation(load_images("assets/player/shooting"), 6),
             "player/sword": Animation(load_images("assets/player/sword"), 10, loop=False),
@@ -26,12 +28,15 @@ class Game:
             "basic_enemy": load_image("assets/basic_enemy.png"),
             "heavy_enemy": load_image("assets/heavy_enemy.png"),
             "fast_enemy": load_image("assets/fast_enemy.png"),
+            "directed_enemy": load_image("assets/directed_enemy.png"),
             "energy_0": load_image("assets/energy_0.png"),
             "energy_1": load_image("assets/energy_1.png"),
             "energy_2": load_image("assets/energy_2.png"),
             "energy_3": load_image("assets/energy_3.png"),
             "score_banner": load_image("assets/score_banner.png")
         }
+
+        self.planets = Planets(self.assets["planets"])
 
         self.start(level=0)
 
@@ -44,17 +49,20 @@ class Game:
         self.score = score
         self.timer = 0
         self.level = level
+        self.level_duration = 3600
 
         self.enemies = []
         self.basic_enemy_counter = 1
         self.heavy_enemy_counter = 1
         self.fast_enemy_counter  = 1
+        self.directed_enemy_counter = 1
 
         self.basic_enemy_cap = 120
         self.heavy_enemy_cap = 240
         self.fast_enemy_cap = 180
+        self.directed_enemy_cap = 180
 
-        self.load_level(0)
+        self.load_level(self.level)
 
     def load_enemies(self, level):
         if level == 0:
@@ -63,16 +71,33 @@ class Game:
             self.basic_enemy_counter += 1
             self.heavy_enemy_counter += 1
         elif level == 2:
-            self.basic_enemy_counter = 1
-            self.heavy_enemy_counter = 1
             self.fast_enemy_counter += 1
-        else:
-            self.basic_enemy_counter += 1
+        elif level == 3:
             self.heavy_enemy_counter += 1
             self.fast_enemy_counter += 1
+        elif level == 4:
+            self.directed_enemy_counter += 1
+        elif level == 5:
+            self.directed_enemy_counter += 1
+            self.heavy_enemy_counter += 1
+            self.basic_enemy_counter += 1
+        elif level == 6:
+            self.basic_enemy_counter += 1
+            self.directed_enemy_counter += 1
 
     def load_level(self, level=0):  
         self.level = level
+        self.basic_enemy_counter = 1
+        self.heavy_enemy_counter = 1
+        self.fast_enemy_counter = 1
+        self.directed_enemy_counter = 1
+
+        if level == 0 or level == 2 or level == 4:
+            self.level_duration = 2400
+        if level == 1 or level == 3:
+            self.level_duration = 3600
+        if level == 6:
+            self.basic_enemy_cap = 60 
 
         if self.game_over:
             self.playing = True
@@ -84,8 +109,9 @@ class Game:
         while True:
             self.display.fill((67, 59, 103))
 
-            
-            
+            self.planets.update()
+            self.planets.render(self.display)
+
             self.player.update((0, (self.movement[1] - self.movement[0]) * 3.5))
             if not self.player.invincibility or self.player.invincibility % 10 == 0:
                 self.player.render(self.display)
@@ -101,6 +127,8 @@ class Game:
                     self.enemies.append(HeavyEnemy(self, (self.display.get_width(), random.randint(self.player.size[1], self.display.get_height() - self.player.size[1])), (50, 50), 2))   
                 if self.fast_enemy_counter % self.fast_enemy_cap == 0:
                     self.enemies.append(FastEnemy(self, (self.display.get_width(), random.randint(self.player.size[1], self.display.get_height() - self.player.size[1])), (50, 15), 1))
+                if self.directed_enemy_counter % self.directed_enemy_cap == 0:
+                    self.enemies.append(DirectedEnemy(self, (self.display.get_width(), random.choice((self.player.size[1], self.display.get_height() - self.player.size[1]))), (50, 15), 1))
 
                 for enemy in self.enemies.copy():
                     enemy.update()
@@ -130,7 +158,6 @@ class Game:
                         break
                         
                         
-
             for event in pygame.event.get():
                 if event.type == pygame.QUIT:
                     pygame.quit()
@@ -144,8 +171,8 @@ class Game:
                             self.movement[1] = True
                         if event.key == pygame.K_f:
                             self.player.shoot()
-                        if event.key == pygame.K_d:
-                            self.player.sword()
+                        #if event.key == pygame.K_d:
+                        #    self.player.sword()
                     else:
                         if event.key == pygame.K_SPACE:
                             self.advance = True
@@ -160,7 +187,7 @@ class Game:
                 text = "Game over\nPress Space to Play Again"
                 render_text(self.display, text, self.game_over_font, (255, 255, 255), ((self.display.get_width() - len(text)*7.5)/2, self.display.get_height()/2 - 30))
                 if self.advance:
-                    self.start(self.level)
+                    self.start(level=self.level, score=self.score)
                     self.advance = False
 
             self.display.blit(self.assets["energy_" + str(self.player.health)], (0, 0))
@@ -176,7 +203,7 @@ class Game:
             self.clock.tick(60)
             self.timer += 1
             
-            if self.timer % 3600 == 0:
+            if self.timer % self.level_duration == 0:
                 self.load_level(self.level + 1)
 
             self.load_enemies(self.level)
