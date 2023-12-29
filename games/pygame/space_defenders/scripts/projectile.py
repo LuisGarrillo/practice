@@ -15,7 +15,7 @@ class Projectile:
         frame_movement = movement + self.velocity[0]
         self.position[0] += frame_movement
         self.animation.update()
-        return self.position[0] > self.game.display.get_width()
+        return self.position[0] > self.game.display.get_width() + 100
     
     def render(self, surface):
         surface.blit(self.game.assets["projectile"].img(), self.position)
