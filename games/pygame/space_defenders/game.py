@@ -14,7 +14,9 @@ class Game:
         self.clock = pygame.time.Clock()
         self.score_font = pygame.font.SysFont("Arial", 20)
         self.game_over_font = pygame.font.SysFont("Arial", 30, bold=True)
+        self.offset = [0, 0]
         self.playing = True
+        self.on_title_sreen = True
         self.game_over = False
         self.advance = False
 
@@ -25,20 +27,20 @@ class Game:
             "player/sword": Animation(load_images("assets/player/sword"), 10, loop=False),
             "slash": Animation(load_images("assets/slash"), 10),
             "projectile": Animation(load_images("projectile"), 10),
-            "basic_enemy": load_image("assets/basic_enemy.png"),
-            "heavy_enemy": load_image("assets/heavy_enemy.png"),
-            "fast_enemy": load_image("assets/fast_enemy.png"),
-            "directed_enemy": load_image("assets/directed_enemy.png"),
-            "energy_0": load_image("assets/energy_0.png"),
-            "energy_1": load_image("assets/energy_1.png"),
-            "energy_2": load_image("assets/energy_2.png"),
-            "energy_3": load_image("assets/energy_3.png"),
+            "basic_enemy": load_image("assets/enemies/basic_enemy.png"),
+            "heavy_enemy": load_image("assets/enemies/heavy_enemy.png"),
+            "fast_enemy": load_image("assets/enemies/fast_enemy.png"),
+            "directed_enemy": load_image("assets/enemies/directed_enemy.png"),
+            "energy_0": load_image("assets/energy_banner/energy_banner_00.png"),
+            "energy_1": load_image("assets/energy_banner/energy_banner_01.png"),
+            "energy_2": load_image("assets/energy_banner/energy_banner_02.png"),
+            "energy_3": load_image("assets/energy_banner/energy_banner_03.png"),
+            "planet_life": load_image("assets/planet_life.png"),
+            "level_banner": load_image("assets/level.png"),
             "score_banner": load_image("assets/score_banner.png")
         }
 
         self.planets = Planets(self.assets["planets"])
-
-        self.start(level=0)
 
     def start(self, score=0, level=0):
         self.player = Player(self, (37, self.display.get_height()/2), (40, 48), 3)
@@ -57,7 +59,7 @@ class Game:
         self.fast_enemy_counter  = 1
         self.directed_enemy_counter = 1
 
-        self.basic_enemy_cap = 120
+        self.basic_enemy_cap = 100
         self.heavy_enemy_cap = 240
         self.fast_enemy_cap = 180
         self.directed_enemy_cap = 180
@@ -84,6 +86,12 @@ class Game:
         elif level == 6:
             self.basic_enemy_counter += 1
             self.directed_enemy_counter += 1
+            self.fast_enemy_counter += 1
+        elif level == 7:
+            self.basic_enemy_counter += 1
+            self.heavy_enemy_counter += 1
+            self.directed_enemy_counter += 1
+            self.fast_enemy_counter += 1
 
     def load_level(self, level=0):  
         self.level = level
@@ -93,20 +101,20 @@ class Game:
         self.directed_enemy_counter = 1
 
         if level == 0 or level == 2 or level == 4:
-            self.level_duration = 2400
+            self.level_duration = 1800
         if level == 1 or level == 3:
             self.level_duration = 3600
         if level == 6:
             self.basic_enemy_cap = 60 
-
+        if level == 7:
+            self.basic_enemy_cap = 80
         if self.game_over:
             self.playing = True
             self.game_over = False
         ...
 
     def run(self):
-
-        while True:
+        def game_loop():
             self.display.fill((67, 59, 103))
 
             self.planets.update()
@@ -122,19 +130,20 @@ class Game:
 
             if self.playing:
                 if self.basic_enemy_counter % self.basic_enemy_cap == 0:
-                    self.enemies.append(BasicEnemy(self, (self.display.get_width(), random.randint(self.player.size[1], self.display.get_height() - self.player.size[1])), (50, 25), 1))
+                    self.enemies.append(BasicEnemy(self, (self.display.get_width(), random.randint(self.player.size[1] * 1.5, self.display.get_height() - self.player.size[1])), (50, 25), 1))
                 if self.heavy_enemy_counter % self.heavy_enemy_cap == 0:
-                    self.enemies.append(HeavyEnemy(self, (self.display.get_width(), random.randint(self.player.size[1], self.display.get_height() - self.player.size[1])), (50, 50), 2))   
+                    self.enemies.append(HeavyEnemy(self, (self.display.get_width(), random.randint(self.player.size[1] * 1.5, self.display.get_height() - self.player.size[1])), (50, 50), 2))   
                 if self.fast_enemy_counter % self.fast_enemy_cap == 0:
-                    self.enemies.append(FastEnemy(self, (self.display.get_width(), random.randint(self.player.size[1], self.display.get_height() - self.player.size[1])), (50, 15), 1))
+                    self.enemies.append(FastEnemy(self, (self.display.get_width(), random.randint(self.player.size[1] * 1.5, self.display.get_height() - self.player.size[1])), (50, 15), 1))
                 if self.directed_enemy_counter % self.directed_enemy_cap == 0:
-                    self.enemies.append(DirectedEnemy(self, (self.display.get_width(), random.choice((self.player.size[1], self.display.get_height() - self.player.size[1]))), (50, 15), 1))
+                    self.enemies.append(DirectedEnemy(self, (self.display.get_width(), random.choice((self.player.size[1] * 1.5, self.display.get_height() - self.player.size[1]))), (50, 15), 1))
 
                 for enemy in self.enemies.copy():
                     enemy.update()
                     enemy.render(self.display)
                     if enemy.position[0] < 0:
                         self.enemies.remove(enemy)
+                        self.planet_health -= 1
                     if enemy.rect().colliderect(self.player.rect()) and not self.player.invincibility:
                         self.player.hit()
                         self.enemies.remove(enemy)
@@ -187,26 +196,62 @@ class Game:
                 text = "Game over\nPress Space to Play Again"
                 render_text(self.display, text, self.game_over_font, (255, 255, 255), ((self.display.get_width() - len(text)*7.5)/2, self.display.get_height()/2 - 30))
                 if self.advance:
-                    self.start(level=self.level, score=self.score)
+                    self.start(level=self.level, score=0)
                     self.advance = False
 
             self.display.blit(self.assets["energy_" + str(self.player.health)], (0, 0))
-            self.display.blit(self.assets["score_banner"], (self.display.get_width() -80, 0))
-            render_text(self.display, str(self.score), self.score_font, (0, 0, 0), (self.display.get_width() - 40, 5))
+            self.display.blit(self.assets["planet_life"], (self.assets["energy_" + str(self.player.health)].get_width(), 0))
+            self.display.blit(self.assets["score_banner"], (self.display.get_width() - self.assets["score_banner"].get_width(), 0))
+            self.display.blit(self.assets["level_banner"], (self.display.get_width() - self.assets["score_banner"].get_width() * 2, 0))
 
-            if self.player.health == 0:
+            render_text(self.display, str(self.score), self.score_font, (0, 0, 0), (self.display.get_width() - 40, self.assets["score_banner"].get_height()/3))
+            render_text(self.display, str(self.level + 1), self.score_font, (0, 0, 0), (self.display.get_width() - 40 - self.assets["score_banner"].get_width(), self.assets["level_banner"].get_height()/3))
+            render_text(self.display, str(self.planet_health), self.score_font, (0, 0, 0), (self.assets["planet_life"].get_width() + self.assets["planet_life"].get_width()/1.5, self.assets["planet_life"].get_height()/3))
+
+            if self.player.health == 0 or self.planet_health == 0:
                 self.playing = False
                 self.game_over = True
 
-            self.screen.blit(pygame.transform.scale(self.display, self.screen.get_size()), (0, 0))
-            pygame.display.update()
-            self.clock.tick(60)
             self.timer += 1
             
             if self.timer % self.level_duration == 0:
                 self.load_level(self.level + 1)
 
             self.load_enemies(self.level)
+
+        def title_sreen():
+            self.display.fill((67, 59, 103))
+
+            self.planets.update()
+            self.planets.render(self.display)
+
+            text = "Space Defenders"
+            render_text(self.display, text, self.game_over_font, (255, 255, 255), ((self.display.get_width() - len(text)*7.5)/2, self.display.get_height()/2 - 30))
+            text = "Press Space to Start"
+            render_text(self.display, text, self.game_over_font, (255, 255, 255), ((self.display.get_width() - len(text)*7.5)/2, self.display.get_height()/2 + 30))
+
+            for event in pygame.event.get():
+                if event.type == pygame.QUIT:
+                    pygame.quit()
+                    sys.exit()
+                
+                if event.type == pygame.KEYDOWN:
+                    if event.key == pygame.K_SPACE:
+                        self.start(level=0)
+                        self.advance = True
+
+            if self.advance:
+                self.advance = False
+                self.on_title_sreen = False
+
+        while True:
+            if self.on_title_sreen:
+                title_sreen()
+            else:
+                game_loop()
+            self.screen.blit(pygame.transform.scale(self.display, self.screen.get_size()), (0, 0))
+            pygame.display.update()
+            self.clock.tick(60)
         
 
 
