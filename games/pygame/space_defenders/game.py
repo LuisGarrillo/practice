@@ -21,6 +21,8 @@ class Game:
         self.advance = False
 
         self.assets = {
+            "tilte": load_image("assets/title.png"),
+            "sub_title": load_image("assets/sub_title.png"),
             "planets": load_images("assets/planets"),
             "player/idle": Animation(load_images("assets/player/idle"), 8),
             "player/shooting": Animation(load_images("assets/player/shooting"), 6),
@@ -86,7 +88,6 @@ class Game:
         elif level == 6:
             self.basic_enemy_counter += 1
             self.directed_enemy_counter += 1
-            self.fast_enemy_counter += 1
         elif level == 7:
             self.basic_enemy_counter += 1
             self.heavy_enemy_counter += 1
@@ -105,7 +106,7 @@ class Game:
         if level == 1 or level == 3:
             self.level_duration = 3600
         if level == 6:
-            self.basic_enemy_cap = 60 
+            self.basic_enemy_cap = 50 
         if level == 7:
             self.basic_enemy_cap = 80
         if self.game_over:
@@ -225,10 +226,8 @@ class Game:
             self.planets.update()
             self.planets.render(self.display)
 
-            text = "Space Defenders"
-            render_text(self.display, text, self.game_over_font, (255, 255, 255), ((self.display.get_width() - len(text)*7.5)/2, self.display.get_height()/2 - 30))
-            text = "Press Space to Start"
-            render_text(self.display, text, self.game_over_font, (255, 255, 255), ((self.display.get_width() - len(text)*7.5)/2, self.display.get_height()/2 + 30))
+            self.display.blit(self.assets["tilte"], ((self.display.get_width() - self.assets["tilte"].get_width())/2, self.display.get_height()/4))
+            self.display.blit(self.assets["sub_title"], ((self.display.get_width() - self.assets["sub_title"].get_width())/2, self.display.get_height()/4 + self.assets["tilte"].get_height() + 10))
 
             for event in pygame.event.get():
                 if event.type == pygame.QUIT:

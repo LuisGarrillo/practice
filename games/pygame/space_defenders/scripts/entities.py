@@ -55,16 +55,9 @@ class Player(PhysicsEntity):
 
         if self.shoot_cooldown:
             self.shoot_cooldown -= 1
-            if self.shoot_cooldown == 5:
+            if self.shoot_cooldown == 10:
                 self.wait = False
 
-        if self.sword_cooldown:
-            self.sword_cooldown -= 1
-            if self.sword_cooldown == 20:
-                self.wait = False
-            if self.sword_cooldown == 0:
-                self.sword_active = False
-        
         if not self.wait:
             self.set_action("idle")
 
@@ -75,7 +68,7 @@ class Player(PhysicsEntity):
 
     def shoot(self):
         if self.shoot_cooldown == 0:
-            self.shoot_cooldown = 20
+            self.shoot_cooldown = 25
             self.game.projectiles.append(Projectile(self.game, (self.position[0] + self.size[0], self.position[1] + self.size[1]/2), (32, 32)))
             self.wait = True
             self.set_action("shooting")
