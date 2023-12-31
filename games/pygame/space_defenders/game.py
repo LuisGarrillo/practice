@@ -17,8 +17,10 @@ class Game:
         self.offset = [0, 0]
         self.playing = True
         self.on_title_sreen = True
+        self.on_game = False
         self.game_over = False
         self.advance = False
+        self.finished = False
 
         self.assets = {
             "tilte": load_image("assets/title.png"),
@@ -85,14 +87,9 @@ class Game:
             self.directed_enemy_counter += 1
             self.heavy_enemy_counter += 1
             self.basic_enemy_counter += 1
-        elif level == 6:
-            self.basic_enemy_counter += 1
-            self.directed_enemy_counter += 1
-        elif level == 7:
-            self.basic_enemy_counter += 1
-            self.heavy_enemy_counter += 1
-            self.directed_enemy_counter += 1
-            self.fast_enemy_counter += 1
+        elif level > 5:
+            self.finished = True
+            self.on_game = False
 
     def load_level(self, level=0):  
         self.level = level
@@ -105,14 +102,6 @@ class Game:
             self.level_duration = 1800
         if level == 1 or level == 3:
             self.level_duration = 3600
-        if level == 6:
-            self.basic_enemy_cap = 50 
-        if level == 7:
-            self.basic_enemy_cap = 80
-        if self.game_over:
-            self.playing = True
-            self.game_over = False
-        ...
 
     def run(self):
         def game_loop():
@@ -181,8 +170,6 @@ class Game:
                             self.movement[1] = True
                         if event.key == pygame.K_f:
                             self.player.shoot()
-                        #if event.key == pygame.K_d:
-                        #    self.player.sword()
                     else:
                         if event.key == pygame.K_SPACE:
                             self.advance = True
@@ -198,6 +185,8 @@ class Game:
                 render_text(self.display, text, self.game_over_font, (255, 255, 255), ((self.display.get_width() - len(text)*7.5)/2, self.display.get_height()/2 - 30))
                 if self.advance:
                     self.start(level=self.level, score=0)
+                    self.playing = True
+                    self.game_over = False
                     self.advance = False
 
             self.display.blit(self.assets["energy_" + str(self.player.health)], (0, 0))
@@ -213,12 +202,13 @@ class Game:
                 self.playing = False
                 self.game_over = True
 
-            self.timer += 1
+            else:
+                self.timer += 1
             
-            if self.timer % self.level_duration == 0:
-                self.load_level(self.level + 1)
+                if self.timer % self.level_duration == 0:
+                    self.load_level(self.level + 1)
 
-            self.load_enemies(self.level)
+                self.load_enemies(self.level)
 
         def title_sreen():
             self.display.fill((67, 59, 103))
@@ -237,17 +227,47 @@ class Game:
                 if event.type == pygame.KEYDOWN:
                     if event.key == pygame.K_SPACE:
                         self.start(level=0)
-                        self.advance = True
+                        self.on_title_sreen = False
+                        self.on_game = True
 
-            if self.advance:
-                self.advance = False
-                self.on_title_sreen = False
+        def finished_screen():
+            self.display.fill((67, 59, 103))
+
+            if self.score > 110:
+                grade = "S"
+            elif self.score > 100:
+                grade = "A"
+            elif self.score > 80:
+                grade = "B"
+            elif self.score > 60:
+                grade = "C"
+            else:
+                grade = "D"
+
+            text = "You win! Grade: " + grade + "\nPress Space to Play Again"
+            render_text(self.display, text, self.game_over_font, (255, 255, 255), ((self.display.get_width() - len(text)*7.5)/2, self.display.get_height()/2 - 30))
+
+            for event in pygame.event.get():
+                if event.type == pygame.QUIT:
+                    pygame.quit()
+                    sys.exit()
+                
+                if event.type == pygame.KEYDOWN:
+                    if event.key == pygame.K_SPACE:
+                        self.start(level=0)
+                        self.finished = False
+                        self.on_game = True
 
         while True:
             if self.on_title_sreen:
                 title_sreen()
-            else:
+
+            elif self.on_game:
                 game_loop()
+
+            elif self.finished:
+                finished_screen()
+
             self.screen.blit(pygame.transform.scale(self.display, self.screen.get_size()), (0, 0))
             pygame.display.update()
             self.clock.tick(60)
