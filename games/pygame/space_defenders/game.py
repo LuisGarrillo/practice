@@ -135,10 +135,6 @@ class Game:
             if not self.player.invincibility or self.player.invincibility % 10 == 0:
                 self.player.render(self.display)
 
-            if self.player.sword_active and self.player.sword_cooldown < 20:
-                self.assets["slash"].update()
-                self.display.blit(self.assets["slash"].img(), self.player.sword_rect())
-
             if self.playing:
                 if self.basic_enemy_counter % self.basic_enemy_cap == 0:
                     self.enemies.append(BasicEnemy(self, (self.display.get_width(), random.randint(self.player.size[1] * 1.5, self.display.get_height() - self.player.size[1])), (50, 25), 1))

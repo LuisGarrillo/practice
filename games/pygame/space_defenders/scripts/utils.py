@@ -48,12 +48,6 @@ class Dialogue:
         self.index = 0
         self.done = False
 
-    def speed(self):
-        self.duration = 1
-
-    def slow(self):
-        self.duration = 3
-
     def advance(self):
         if self.dialogue_number + 1 < len(self.text_collecion):
             self.dialogue_number += 1
@@ -63,6 +57,9 @@ class Dialogue:
             return True
         else:
             return False
+        
+    def set_dialogue(self, dialogue_number):
+        self.dialogue_number = dialogue_number
         
     def update(self):
         if self.index == len(self.text_collecion[self.dialogue_number]) - 1:
