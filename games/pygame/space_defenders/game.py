@@ -1,7 +1,7 @@
 import pygame, sys, random
 
 from scripts.entities import Player, BasicEnemy, HeavyEnemy, FastEnemy, DirectedEnemy
-from scripts.utils import load_image, load_images, render_text, Animation
+from scripts.utils import load_image, load_images, render_text, Animation, Dialogue
 from scripts.planets import Planets
 
 class Game:
@@ -12,12 +12,17 @@ class Game:
         self.screen = pygame.display.set_mode((960, 540))
         self.display = pygame.Surface((480, 270))
         self.clock = pygame.time.Clock()
+
+        self.dialogue_font = pygame.font.SysFont("Arial", 10)
         self.score_font = pygame.font.SysFont("Arial", 20)
         self.game_over_font = pygame.font.SysFont("Arial", 30, bold=True)
+        self.speed_up = False
+
         self.offset = [0, 0]
         self.playing = True
         self.on_title_sreen = True
         self.on_game = False
+        self.on_tutorial = False
         self.game_over = False
         self.advance = False
         self.finished = False
@@ -44,6 +49,21 @@ class Game:
             "score_banner": load_image("assets/score_banner.png")
         }
 
+        self.screens = {
+            "tutorial_1": load_image("tutorials/tutorial_1.png"),
+            "tutorial_2": load_image("tutorials/tutorial_2.png"),
+        }
+
+        self.dialogues = {
+            "tutorial_1": Dialogue(
+                ("Use the arrow keys to move and \npress F to shoot.", ), 3
+            ),
+            "tutorial_2": Dialogue(
+                ("If you get hit you'll lose energy, \nif you let enemies pass through \nour planet will lose life.",
+                 "Save us from the human army \ninvasion!"), 3
+            ),
+        }
+
         self.planets = Planets(self.assets["planets"])
 
     def start(self, score=0, level=0):
@@ -55,6 +75,7 @@ class Game:
         self.score = score
         self.timer = 0
         self.level = level
+        self.tutorial_level = 1
         self.level_duration = 3600
 
         self.enemies = []
@@ -229,6 +250,33 @@ class Game:
                         self.start(level=0)
                         self.on_title_sreen = False
                         self.on_game = True
+                        if self.tutorial_level == 1:
+                            self.on_tutorial = True
+
+        def tutorial():
+            self.display.blit(self.screens["tutorial_" + str(self.tutorial_level)], (0, 0))
+            self.dialogues["tutorial_" + str(self.tutorial_level)].update()
+            self.dialogues["tutorial_" + str(self.tutorial_level)].render(self.display, self.dialogue_font, (255, 255, 255), (180, 7))
+        
+            for event in pygame.event.get():
+                if event.type == pygame.QUIT:
+                    pygame.quit()
+                    sys.exit()
+                
+                if event.type == pygame.KEYDOWN:
+                    if event.key == pygame.K_SPACE:
+                        self.advance = True
+
+            if self.advance and self.dialogues["tutorial_" + str(self.tutorial_level)].done:
+                if self.dialogues["tutorial_" + str(self.tutorial_level)].advance():
+                    self.advance = False
+                else:
+                    self.tutorial_level += 1
+                    self.advance = False
+                if self.tutorial_level == 3:
+                    self.on_tutorial = False
+            else:
+                self.advance = False
 
         def finished_screen():
             self.display.fill((67, 59, 103))
@@ -263,7 +311,10 @@ class Game:
                 title_sreen()
 
             elif self.on_game:
-                game_loop()
+                if self.on_tutorial:
+                    tutorial()
+                else:
+                    game_loop()
 
             elif self.finished:
                 finished_screen()
