@@ -10,9 +10,15 @@ class PhysicsEntity:
         self.velocity = [0, 0]
         self.health = health
         self.wait = False
+        self.action = ""
 
     def rect(self):
         return pygame.Rect(self.position[0], self.position[1], self.size[0], self.size[1])
+    
+    def set_action(self, action):
+        if action != self.action:
+            self.action = action
+            self.animation = self.game.assets[self.type + "/" + self.action].copy()
 
     def update(self, movement=(0,0)) -> None:
         frame_movement = (movement[0] + self.velocity[0], movement[1] + self.velocity[1])
@@ -20,15 +26,16 @@ class PhysicsEntity:
             self.position[0] += frame_movement[0]
             self.position[1] += frame_movement[1]
 
+        self.animation.update()
+
     def render(self, surface) -> None:
-        surface.blit(self.game.assets[self.type], self.position)
+        surface.blit(self.animation.img(), (self.position[0], self.position[1]))
 
 
 class Player(PhysicsEntity):
     def __init__(self, game, position, size, health) -> None:
         super().__init__(game, "player", position, size, health)
         self.health = 3
-        self.action = ""
 
         self.invincibility = 0
         self.shoot_cooldown = 0
@@ -39,11 +46,6 @@ class Player(PhysicsEntity):
 
     def sword_rect(self):
         return pygame.Rect(self.position[0] + self.size[0]/2, self.position[1] - 16, 48, 80)
-    
-    def set_action(self, action):
-        if action != self.action:
-            self.action = action
-            self.animation = self.game.assets[self.type + "/" + self.action].copy()
 
     def update(self, movement=[0, 0]) -> None:
         super().update(movement)
@@ -61,10 +63,6 @@ class Player(PhysicsEntity):
         if not self.wait:
             self.set_action("idle")
 
-        self.animation.update()
-    
-    def render(self, surface) -> None:
-        surface.blit(self.animation.img(), (self.position[0], self.position[1]))
 
     def shoot(self):
         if self.shoot_cooldown == 0:
@@ -90,6 +88,7 @@ class Player(PhysicsEntity):
 class BasicEnemy(PhysicsEntity):
     def __init__(self, game, position, size, health) -> None:
         super().__init__(game, "basic_enemy", position, size, health)
+        self.animation = self.game.assets[self.type].copy()
     
     def update(self, movement=(0, 0)) -> None:
         super().update(movement)
@@ -98,6 +97,7 @@ class BasicEnemy(PhysicsEntity):
 class HeavyEnemy(PhysicsEntity):
     def __init__(self, game, position, size, health) -> None:
         super().__init__(game, "heavy_enemy", position, size, health)
+        self.animation = self.game.assets[self.type].copy()
     
     def update(self, movement=(0, 0)) -> None:
         super().update(movement)
@@ -106,6 +106,7 @@ class HeavyEnemy(PhysicsEntity):
 class FastEnemy(PhysicsEntity):
     def __init__(self, game, position, size, health) -> None:
         super().__init__(game, "fast_enemy", position, size, health)
+        self.animation = self.game.assets[self.type].copy()
     
     def update(self, movement=(0, 0)) -> None:
         super().update(movement)
@@ -114,6 +115,7 @@ class FastEnemy(PhysicsEntity):
 class DirectedEnemy(PhysicsEntity):
     def __init__(self, game, position, size, health) -> None:
         super().__init__(game, "directed_enemy", position, size, health)
+        self.animation = self.game.assets[self.type].copy()
 
     def update(self, movement=(0, 0)) -> None:
         self.velocity[0] = -6

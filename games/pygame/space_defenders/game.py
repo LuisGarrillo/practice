@@ -31,15 +31,15 @@ class Game:
             "tilte": load_image("assets/title.png"),
             "sub_title": load_image("assets/sub_title.png"),
             "planets": load_images("assets/planets"),
+            "background":load_image("background.png"),
             "player/idle": Animation(load_images("assets/player/idle"), 8),
             "player/shooting": Animation(load_images("assets/player/shooting"), 6),
-            "player/sword": Animation(load_images("assets/player/sword"), 10, loop=False),
             "slash": Animation(load_images("assets/slash"), 10),
             "projectile": Animation(load_images("projectile"), 10),
-            "basic_enemy": load_image("assets/enemies/basic_enemy.png"),
-            "heavy_enemy": load_image("assets/enemies/heavy_enemy.png"),
-            "fast_enemy": load_image("assets/enemies/fast_enemy.png"),
-            "directed_enemy": load_image("assets/enemies/directed_enemy.png"),
+            "basic_enemy": Animation(load_images("assets/enemies/basic_enemy")),
+            "heavy_enemy": Animation(load_images("assets/enemies/heavy_enemy")),
+            "fast_enemy": Animation(load_images("assets/enemies/fast_enemy")),
+            "directed_enemy": Animation(load_images("assets/enemies/directed_enemy")),
             "energy_0": load_image("assets/energy_banner/energy_banner_00.png"),
             "energy_1": load_image("assets/energy_banner/energy_banner_01.png"),
             "energy_2": load_image("assets/energy_banner/energy_banner_02.png"),
@@ -126,8 +126,6 @@ class Game:
 
     def run(self):
         def game_loop():
-            self.display.fill((67, 59, 103))
-
             self.planets.update()
             self.planets.render(self.display)
 
@@ -228,7 +226,6 @@ class Game:
                 self.load_enemies(self.level)
 
         def title_sreen():
-            self.display.fill((67, 59, 103))
 
             self.planets.update()
             self.planets.render(self.display)
@@ -275,7 +272,6 @@ class Game:
                 self.advance = False
 
         def finished_screen():
-            self.display.fill((67, 59, 103))
 
             if self.score > 110:
                 grade = "S"
@@ -303,6 +299,7 @@ class Game:
                         self.on_game = True
 
         while True:
+            self.display.blit(self.assets["background"], (0, 0))
             if self.on_title_sreen:
                 title_sreen()
 
