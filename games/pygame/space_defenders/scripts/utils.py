@@ -37,4 +37,37 @@ class Animation:
                 self.done = True
 
     def img(self):
-        return self.images[int(self.frame / self.duration)]  
+        return self.images[int(self.frame / self.duration)]
+
+class Dialogue:
+    def __init__(self, text_collecion, duration = 3) -> None:
+        self.text_collecion = text_collecion
+        self.dialogue_number = 0
+        self.duration = duration
+        self.frame = -1
+        self.index = 0
+        self.done = False
+
+    def advance(self):
+        if self.dialogue_number + 1 < len(self.text_collecion):
+            self.dialogue_number += 1
+            self.frame = -1
+            self.index = 0
+            self.done = False
+            return True
+        else:
+            return False
+        
+    def set_dialogue(self, dialogue_number):
+        self.dialogue_number = dialogue_number
+        
+    def update(self):
+        if self.index == len(self.text_collecion[self.dialogue_number]) - 1:
+            self.done = True
+        else:
+            self.frame = (self.frame + 1) % (len(self.text_collecion[self.dialogue_number]) * self.duration)
+            self.index = int(self.frame / self.duration)
+    
+    def render(self, surface, font, color, position):
+        text = self.text_collecion[self.dialogue_number]
+        render_text(surface, text[:self.index + 1], font, color, position)
