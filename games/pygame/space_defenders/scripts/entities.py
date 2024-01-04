@@ -68,6 +68,7 @@ class Player(PhysicsEntity):
         if self.shoot_cooldown == 0:
             self.shoot_cooldown = 25
             self.game.projectiles.append(Projectile(self.game, (self.position[0] + self.size[0], self.position[1] + self.size[1]/2), (32, 32)))
+            self.game.sfxs["laser"].play()
             self.wait = True
             self.set_action("shooting")
 
